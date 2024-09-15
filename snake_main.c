@@ -49,7 +49,6 @@ void start_game(){
 	while(alive==1){
 		user_input(head);
 		next_frame(head);
-		sleep(2);
 	}
 	tmp = head->next_body;
 	free(head);
@@ -106,7 +105,6 @@ void next_frame(snake *head){
 	}
 	if(cur_stat != CRASH){
 		move_snake(head);
-		printf("The snake has moved to pos %d and %d \n", head->x, head->y);
 	} else {
 		printf("HIT SOMETHING\n");
 		alive=0;
@@ -149,39 +147,37 @@ void move_snake(snake *head){
 }
 
 void user_input(snake *head){
-	time_t start = time(NULL);
-	while(!kbhit()){
-		if((time(NULL) - start)>=2){
-			printf("herp");
-			return;
-		} else {
-			printf("derp");
-			char input=getch();
-			switch(input){
-				case 'a':
-					if(head->dir != 1){
-						head->dir = 3;
-					}
-					break;
-				case 's':
-					if(head->dir != 0){
-						head->dir=2;
-					}
-					break;
-				case 'd':
-					if(head->dir != 3){
-						head->dir=1;
-					}
-					break;
-				case 'w':
-					if(head->dir != 2){
-						head->dir=0;
-					}
-					break;
-				default:
-					return;
+	WINDOW *w;
+	char input;
+	w=initscr();
+	refresh();
+	printw("The snake is currently at x: %d and y: %d \n", head->x, head->y);
+	timeout(3000);
+	input=getch();
+	endwin();
+	switch(input){
+		case 'a':
+			if(head->dir != 1){
+			head->dir = 3;
 			}
-		}
+			break;
+		case 's':
+			if(head->dir != 0){
+				head->dir=2;
+			}
+			break;
+		case 'd':
+			if(head->dir != 3){
+				head->dir=1;
+			}
+			break;
+		case 'w':
+			if(head->dir != 2){
+			head->dir=0;
+			}
+			break;
+		default:
+			return;
 	}
 	return;
 }
