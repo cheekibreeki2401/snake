@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+#include <ncurses.h>
+#include "kbhit.h"
 int field_x=20;
 int field_y=30;
 int score=0;
@@ -19,6 +22,7 @@ void start_game();
 void make_body(snake *head);
 void next_frame(snake *head);
 void move_snake(snake *head);
+void user_input(snake *head);
 int main(){
 	start_game();
 	return 0;
@@ -32,7 +36,7 @@ void start_game(){
 	}
 	head->x = field_x/2;
 	head->y = field_y/2;
-	head->dir = 0;
+	head->dir = 3;
 	for(int i = 0; i < body_parts; i++){
 		make_body(head);
 	}
@@ -43,6 +47,7 @@ void start_game(){
 		tmp = tmp->next_body;
 	}
 	while(alive==1){
+		user_input(head);
 		next_frame(head);
 		sleep(2);
 	}
@@ -52,7 +57,6 @@ void start_game(){
 	{
 		snake *tmp2 = tmp;
 		tmp = tmp->next_body;
-		free(tmp2);
 	}
 	printf("Game over\n");
 	return;
@@ -94,7 +98,10 @@ void make_body(snake *head){
 
 void next_frame(snake *head){
 	status cur_stat = MOVE;
-	if(head->dir==0 && head->y-1 == 0){
+	if((head->dir==0 && head->y-1 == 0)||
+			(head->dir==1 && head->x+1==field_x)||
+			(head->dir==2 && head->y+1==field_y)||
+			(head->dir==3 && head->x-1==0)){
 		cur_stat = CRASH;
 	}
 	if(cur_stat != CRASH){
@@ -114,8 +121,22 @@ void move_snake(snake *head){
 	tmp2=malloc(sizeof(snake));
 	tmp=head;
 	tmp2=head->next_body;
-	if(head->dir == 0){
-		head->y = head->y-1;
+	switch(head->dir)
+	{
+		case 0:
+			head->y -= 1;
+			break;
+		case 1:
+			head->x += 1;
+			break;
+		case 2:
+			head->y += 1;
+			break;
+		case 3:
+			head->x -=1;
+			break;
+		default:
+			printf("We should not be here");
 	}
 	while(tmp->next_body != NULL){
 		tmp->next_body->x = tmp->x;
@@ -123,6 +144,44 @@ void move_snake(snake *head){
 		tmp->next_body->dir = tmp->dir;
 		tmp = tmp2;
 		tmp2 = tmp2->next_body;
+	}
+	return;
+}
+
+void user_input(snake *head){
+	time_t start = time(NULL);
+	while(!kbhit()){
+		if((time(NULL) - start)>=2){
+			printf("herp");
+			return;
+		} else {
+			printf("derp");
+			char input=getch();
+			switch(input){
+				case 'a':
+					if(head->dir != 1){
+						head->dir = 3;
+					}
+					break;
+				case 's':
+					if(head->dir != 0){
+						head->dir=2;
+					}
+					break;
+				case 'd':
+					if(head->dir != 3){
+						head->dir=1;
+					}
+					break;
+				case 'w':
+					if(head->dir != 2){
+						head->dir=0;
+					}
+					break;
+				default:
+					return;
+			}
+		}
 	}
 	return;
 }
