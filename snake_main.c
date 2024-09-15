@@ -23,6 +23,7 @@ void make_body(snake *head);
 void next_frame(snake *head);
 void move_snake(snake *head);
 void user_input(snake *head);
+int collide_with_self(snake *head);
 int main(){
 	start_game();
 	return 0;
@@ -42,7 +43,7 @@ void start_game(){
 	}
 	snake *tmp=malloc(sizeof(snake));
 	tmp = head;
-	while(tmp->next_body != NULL){
+	while(tmp != NULL){
 		printf("The position of this body part is %d and %d. \n", tmp->x, tmp->y);
 		tmp = tmp->next_body;
 	}
@@ -78,7 +79,7 @@ void make_body(snake *head){
 			new_snake->y = tmp->y+1;
 			break;
 		case 1:
-			new_snake->x = tmp->x+1;
+			new_snake->x = tmp->x-1;
 			new_snake->y = tmp->y;
 			break;
 		case 2:
@@ -86,7 +87,7 @@ void make_body(snake *head){
 			new_snake->y = tmp->y-1;
 			break;
 		case 3:
-			new_snake->x = tmp->x-1;
+			new_snake->x = tmp->x+1;
 			new_snake->y = tmp->y;
 			break;
 		default:
@@ -100,11 +101,13 @@ void next_frame(snake *head){
 	if((head->dir==0 && head->y-1 == 0)||
 			(head->dir==1 && head->x+1==field_x)||
 			(head->dir==2 && head->y+1==field_y)||
-			(head->dir==3 && head->x-1==0)){
+			(head->dir==3 && head->x-1==0)||
+			collide_with_self(head)==1){
 		cur_stat = CRASH;
 	}
 	if(cur_stat != CRASH){
 		move_snake(head);
+		printf("Can move forward!\n");
 	} else {
 		printf("HIT SOMETHING\n");
 		alive=0;
@@ -152,7 +155,7 @@ void user_input(snake *head){
 	w=initscr();
 	refresh();
 	printw("The snake is currently at x: %d and y: %d \n", head->x, head->y);
-	timeout(3000);
+	timeout(500);
 	input=getch();
 	endwin();
 	switch(input){
@@ -180,4 +183,19 @@ void user_input(snake *head){
 			return;
 	}
 	return;
+}
+
+int collide_with_self(snake *head){
+	snake *tmp;
+	tmp = head->next_body;
+	while(tmp != NULL){
+		if((head->dir==0 && head->y-1==tmp->y && head->x == tmp->x)||
+				(head->dir==1 && head->x+1==tmp->x && head->y == tmp->y)||
+				(head->dir==2 && head->y+1 == tmp->y && head->x == tmp->x)||
+				(head->dir==3 && head->x-1 == tmp->x && head->y == tmp->y)){
+			return 1;
+		}
+		tmp=tmp->next_body;
+	}
+	return 0;
 }
