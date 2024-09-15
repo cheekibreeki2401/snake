@@ -46,6 +46,14 @@ void start_game(){
 		next_frame(head);
 		sleep(2);
 	}
+	tmp = head->next_body;
+	free(head);
+	while(tmp != NULL)
+	{
+		snake *tmp2 = tmp;
+		tmp = tmp->next_body;
+		free(tmp2);
+	}
 	printf("Game over\n");
 	return;
 }
