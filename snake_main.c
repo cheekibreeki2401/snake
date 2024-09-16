@@ -3,12 +3,14 @@
 #include <unistd.h>
 #include <time.h>
 #include <ncurses.h>
-#include "kbhit.h"
-int field_x=20;
-int field_y=30;
+int field_x=75;
+int field_y=50;
 int score=0;
+int scorex;
+int scorey;
 int body_parts=5;
 int alive = 1;
+int cur_time = 250;
 typedef enum status{MOVE, CRASH, SCORE, WAIT}status;
 typedef struct snake{
 	int x;
@@ -24,12 +26,18 @@ void next_frame(snake *head);
 void move_snake(snake *head);
 void user_input(snake *head);
 int collide_with_self(snake *head);
+void draw_map(snake *head);
+char is_body_render(snake *head, int x, int y);
+void randomize_item();
+void score_item();
 int main(){
 	start_game();
 	return 0;
 }
 
 void start_game(){
+	srand(time(NULL));
+	randomize_item();
 	snake *head;
 	head=malloc(sizeof(snake));
 	if(head == NULL){
@@ -58,7 +66,7 @@ void start_game(){
 		snake *tmp2 = tmp;
 		tmp = tmp->next_body;
 	}
-	printf("Game over\n");
+	printf("Game over, you got a score of:%d \n", score);
 	return;
 }
 
@@ -106,8 +114,14 @@ void next_frame(snake *head){
 		cur_stat = CRASH;
 	}
 	if(cur_stat != CRASH){
+		if((head->dir==0 && head->y-1 == scorey && head->x==scorex)||
+				(head->dir==1 && head->x+1==scorex && head->y==scorey)||
+				(head->dir==2 && head->y+1==scorey && head->x==scorex)||
+				(head->dir==3 && head->x-1==scorex && head->y==scorey)){
+			score_item();
+			make_body(head);
+		}
 		move_snake(head);
-		printf("Can move forward!\n");
 	} else {
 		printf("HIT SOMETHING\n");
 		alive=0;
@@ -117,11 +131,26 @@ void next_frame(snake *head){
 
 void move_snake(snake *head){
 	snake *tmp;
-	snake *tmp2;
 	tmp=malloc(sizeof(snake));
-	tmp2=malloc(sizeof(snake));
-	tmp=head;
-	tmp2=head->next_body;
+	int x=head->x;
+	int y=head->y;
+	int dir=head->dir;
+	tmp = head->next_body;
+	int x2=tmp->x;
+	int y2=tmp->y;
+	int dir2=tmp->dir;
+	while(tmp != NULL){
+		x2=tmp->x;
+		y2=tmp->y;
+		dir2=tmp->dir;
+		tmp->x=x;
+		tmp->y=y;
+		tmp->dir=dir;
+		tmp=tmp->next_body;
+		x=x2;
+		y=y2;
+		dir=dir2;
+	}
 	switch(head->dir)
 	{
 		case 0:
@@ -139,13 +168,6 @@ void move_snake(snake *head){
 		default:
 			printf("We should not be here");
 	}
-	while(tmp->next_body != NULL){
-		tmp->next_body->x = tmp->x;
-		tmp->next_body->y = tmp->y;
-		tmp->next_body->dir = tmp->dir;
-		tmp = tmp2;
-		tmp2 = tmp2->next_body;
-	}
 	return;
 }
 
@@ -154,9 +176,9 @@ void user_input(snake *head){
 	char input;
 	w=initscr();
 	refresh();
-	printw("The snake is currently at x: %d and y: %d \n", head->x, head->y);
-	timeout(500);
+	timeout(cur_time);
 	input=getch();
+	draw_map(head);
 	endwin();
 	switch(input){
 		case 'a':
@@ -198,4 +220,69 @@ int collide_with_self(snake *head){
 		tmp=tmp->next_body;
 	}
 	return 0;
+}
+
+void draw_map(snake *head){
+	clear();
+	for(int i=0; i <= field_y; i++){
+		for(int j=0; j<=field_x;j++){
+			if(i==0 || i== field_y || j==0 || j== field_x){
+				printw("#");
+			} else {
+				if(i==head->y && j==head->x){
+					switch(head->dir){
+						case 0:
+							printw("^");
+							break;
+						case 1:
+							printw(">");
+							break;
+						case 2:
+							printw("v");
+							break;
+						case 3:
+							printw("<");
+							break;
+						default:
+							printw("ERR");
+					}
+				} else if(j==scorex && i==scorey) {
+					printw("*");
+				} else {
+					printw("%c", is_body_render(head, j, i));
+				}
+			}
+		}
+		printw("\n");
+	}
+	printf("\n");
+	return;
+}
+
+char is_body_render(snake *head, int x, int y){
+	snake *tmp;
+	tmp = head->next_body;
+	while(tmp != NULL){
+		if(x==tmp->x && y==tmp->y){
+			if(tmp->dir%2==0){
+				return 'I'; 
+			} else {
+				return '-';
+			}
+		}
+		tmp=tmp->next_body;
+	}
+	return ' ';
+}
+
+void randomize_item(){
+	scorex=rand()%field_x;
+	scorey=rand()%field_y;
+	return;
+}
+
+void score_item(){
+	score+=1;
+	cur_time-=10;
+	randomize_item();
 }
