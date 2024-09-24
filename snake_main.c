@@ -65,6 +65,7 @@ void start_game(){
 	{
 		snake *tmp2 = tmp;
 		tmp = tmp->next_body;
+		free(tmp2);
 	}
 	printf("Game over, you got a score of:%d \n", score);
 	return;
@@ -175,6 +176,9 @@ void user_input(snake *head){
 	WINDOW *w;
 	char input;
 	w=initscr();
+	init_pair(1, COLOR_RED, COLOR_BLACK);
+	init_pair(2, COLOR_WHITE, COLOR_BLACK);
+	init_pair(3, COLOR_GREEN, COLOR_BLACK);
 	refresh();
 	timeout(cur_time);
 	input=getch();
@@ -227,9 +231,11 @@ void draw_map(snake *head){
 	for(int i=0; i <= field_y; i++){
 		for(int j=0; j<=field_x;j++){
 			if(i==0 || i== field_y || j==0 || j== field_x){
+				attron(COLOR_PAIR(1));
 				printw("#");
 			} else {
 				if(i==head->y && j==head->x){
+					attron(COLOR_PAIR(2));
 					switch(head->dir){
 						case 0:
 							printw("^");
@@ -247,8 +253,10 @@ void draw_map(snake *head){
 							printw("ERR");
 					}
 				} else if(j==scorex && i==scorey) {
+					attron(COLOR_PAIR(3));
 					printw("*");
 				} else {
+					attron(COLOR_PAIR(2));
 					printw("%c", is_body_render(head, j, i));
 				}
 			}
@@ -276,8 +284,8 @@ char is_body_render(snake *head, int x, int y){
 }
 
 void randomize_item(){
-	scorex=rand()%field_x;
-	scorey=rand()%field_y;
+	scorex=rand()%(field_x-1)+1;
+	scorey=rand()%(field_y-1)+1;
 	return;
 }
 
