@@ -11,6 +11,7 @@ int scorey;
 int body_parts=5;
 int alive = 1;
 int cur_time = 250;
+WINDOW *w;
 typedef enum status{MOVE, CRASH, SCORE, WAIT}status;
 typedef struct snake{
 	int x;
@@ -38,6 +39,8 @@ int main(){
 void start_game(){
 	srand(time(NULL));
 	randomize_item();
+	w=initscr();
+	start_color();
 	snake *head;
 	head=malloc(sizeof(snake));
 	if(head == NULL){
@@ -46,6 +49,9 @@ void start_game(){
 	head->x = field_x/2;
 	head->y = field_y/2;
 	head->dir = 3;
+	if(head->next_body != NULL){
+		printf("\n... but why?!\n");
+	}
 	for(int i = 0; i < body_parts; i++){
 		make_body(head);
 	}
@@ -59,6 +65,7 @@ void start_game(){
 		user_input(head);
 		next_frame(head);
 	}
+	endwin();
 	tmp = head->next_body;
 	free(head);
 	while(tmp != NULL)
@@ -173,17 +180,14 @@ void move_snake(snake *head){
 }
 
 void user_input(snake *head){
-	WINDOW *w;
 	char input;
-	w=initscr();
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	init_pair(2, COLOR_WHITE, COLOR_BLACK);
 	init_pair(3, COLOR_GREEN, COLOR_BLACK);
-	refresh();
 	timeout(cur_time);
 	input=getch();
 	draw_map(head);
-	endwin();
+	refresh();
 	switch(input){
 		case 'a':
 			if(head->dir != 1){
@@ -231,11 +235,11 @@ void draw_map(snake *head){
 	for(int i=0; i <= field_y; i++){
 		for(int j=0; j<=field_x;j++){
 			if(i==0 || i== field_y || j==0 || j== field_x){
-				attron(COLOR_PAIR(1));
+				wattron(w, COLOR_PAIR(1));
 				printw("#");
 			} else {
 				if(i==head->y && j==head->x){
-					attron(COLOR_PAIR(2));
+					wattron(w, COLOR_PAIR(2));
 					switch(head->dir){
 						case 0:
 							printw("^");
@@ -253,10 +257,10 @@ void draw_map(snake *head){
 							printw("ERR");
 					}
 				} else if(j==scorex && i==scorey) {
-					attron(COLOR_PAIR(3));
+					wattron(w, COLOR_PAIR(3));
 					printw("*");
 				} else {
-					attron(COLOR_PAIR(2));
+					wattron(w, COLOR_PAIR(2));
 					printw("%c", is_body_render(head, j, i));
 				}
 			}
